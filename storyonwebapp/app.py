@@ -9,7 +9,8 @@ app = Flask(__name__)
 app.secret_key = 'secretkey'
 CORS(app)
 
-UPLOAD_FOLDER = 'static/videos'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'videos')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -109,7 +110,9 @@ def upload():
 
         if file:
             filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            upload_dir = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_dir, exist_ok=True)
+            filepath = os.path.join(upload_dir, filename)
             file.save(filepath)
 
             conn = sqlite3.connect('users.db')
@@ -124,7 +127,7 @@ def upload():
             flash("Something went wrong", "error")
     return render_template('upload.html')
 
-@app.route('/delete/<filename>')
+@app.route('/delete/<filename>', methods=['POST'])
 def delete_video(filename):
     if 'user' not in session:
         return redirect('/login')
